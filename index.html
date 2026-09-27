@@ -172,6 +172,23 @@
   .live-dot{ width:6px; height:6px; border-radius:50%; background:var(--good); animation:pulseDot 1.6s ease-in-out infinite; }
   @keyframes pulseDot{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
   @media (prefers-reduced-motion: reduce){ .live-dot{ animation:none; } }
+
+  /* ---------- Structure selector ---------- */
+  .structure-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:2px 0 4px; }
+  .structure-tab{
+    font-family:"Archivo"; font-weight:700; font-size:13px; letter-spacing:0.02em;
+    color:var(--muted); background:var(--surface); border:1px solid var(--border-strong);
+    padding:9px 18px; border-radius:999px; cursor:pointer; transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .structure-tab:hover{ background:var(--surface-alt); color:var(--heading); }
+  .structure-tab.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .structure-tab:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .structure-note{ font-size:13px; color:var(--muted); margin:8px 0 22px; max-width:90ch; line-height:1.55; }
+  .fixed-info{
+    background:var(--surface-alt); border:1px dashed var(--border-strong); border-radius:10px;
+    padding:12px 14px; font-size:12.5px; color:var(--body); line-height:1.6; margin-bottom:16px;
+  }
+  .fixed-info strong{ color:var(--heading); font-family:"IBM Plex Mono"; font-weight:600; }
 </style>
 
 <div class="page">
@@ -184,11 +201,19 @@
       </div>
       <div>
         <h1 class="page-title">Rate Calculator</h1>
-        <p class="page-sub">Live sensitivity model for the deal's five key levers — calibrated to the Executive Summary baseline (Q3 2026). Adjust any input to see how it moves the Franchisee, Prestige, and Steve outcomes.</p>
+        <p class="page-sub">Live sensitivity model calibrated to the Executive Summary baseline (Q3 2026). Pick a deal structure, then adjust any lever to see how it moves the Franchisee, Prestige, and Steve outcomes.</p>
       </div>
     </div>
     <button class="btn-ghost" id="resetBtn" type="button">Reset to Baseline</button>
   </header>
+
+  <div class="structure-tabs" role="tablist" aria-label="Deal structure">
+    <button class="structure-tab active" data-structure="legacy" type="button">Legacy</button>
+    <button class="structure-tab" data-structure="optionA" type="button">Option A</button>
+    <button class="structure-tab" data-structure="optionB" type="button">Option B</button>
+    <button class="structure-tab" data-structure="optionC" type="button">Option C</button>
+  </div>
+  <p class="structure-note" id="structureNote">The original $35,000/yr Setup Fee model. Franchisee pays the fee once; Prestige and Steve split the net profit pool 50/50, and both also share in the ongoing medication-margin economics below.</p>
 
   <main class="layout">
     <section class="panel levers" aria-label="Deal levers">
@@ -197,67 +222,217 @@
         <span class="live-tag"><span class="live-dot"></span>LIVE</span>
       </div>
 
-      <div class="lever" data-lever="setupFee">
-        <div class="lever-label-row">
-          <span class="lever-label">1. Franchisee Setup Fee <span style="color:var(--muted);font-weight:500;">/ yr</span></span>
-          <div class="lever-value-wrap">
-            <input class="lever-value" id="setupFee-num" inputmode="numeric" value="$35,000">
+      <div class="lever-group" data-structure="legacy">
+        <div class="lever" data-lever="setupFee">
+          <div class="lever-label-row">
+            <span class="lever-label">1. Franchisee Setup Fee <span style="color:var(--muted);font-weight:500;">/ yr</span></span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="legacy_setupFee-num" inputmode="numeric" value="$35,000">
+            </div>
           </div>
+          <div class="slider-wrap">
+            <input type="range" id="legacy_setupFee-range" min="10000" max="60000" step="500" value="35000">
+          </div>
+          <div class="lever-scale"><span>$10,000</span><span>$60,000</span></div>
+          <div class="lever-baseline">Baseline: $35,000/yr ($10K down + $2,273/mo &times; 11)</div>
         </div>
-        <div class="slider-wrap">
-          <input type="range" id="setupFee-range" min="10000" max="60000" step="500" value="35000">
+
+        <div class="lever" data-lever="royalty">
+          <div class="lever-label-row">
+            <span class="lever-label">2. Royalty Affiliate %</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="legacy_royalty-num" inputmode="decimal" value="5.0%">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <div class="band-hint" id="legacy_royalty-band"></div>
+            <input type="range" id="legacy_royalty-range" min="0" max="20" step="0.5" value="5">
+          </div>
+          <div class="lever-scale"><span>0%</span><span>20%</span></div>
+          <div class="lever-baseline"><span class="band-dot"></span>Baseline: 5% (low end of the documented 5–12% range) &middot; split 50/50 w/ Steve</div>
         </div>
-        <div class="lever-scale"><span>$10,000</span><span>$60,000</span></div>
-        <div class="lever-baseline">Baseline: $35,000/yr ($10K down + $2,273/mo &times; 11)</div>
+
+        <div class="lever" data-lever="gpoMargin">
+          <div class="lever-label-row">
+            <span class="lever-label">3. GPO Margin %</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="legacy_gpoMargin-num" inputmode="decimal" value="30.0%">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <div class="band-hint" id="legacy_gpoMargin-band"></div>
+            <input type="range" id="legacy_gpoMargin-range" min="20" max="45" step="0.5" value="30">
+          </div>
+          <div class="lever-scale"><span>20%</span><span>45%</span></div>
+          <div class="lever-baseline"><span class="band-dot"></span>Baseline: 30% (low end of the documented 30–35% cap)</div>
+        </div>
+
+        <div class="lever" data-lever="ladderAdj">
+          <div class="lever-label-row">
+            <span class="lever-label">4. Retail Pricing Ladder</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="legacy_ladderAdj-num" inputmode="decimal" value="+0.0%">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" id="legacy_ladderAdj-range" min="-25" max="35" step="1" value="0">
+          </div>
+          <div class="lever-scale"><span>&minus;25%</span><span>+35%</span></div>
+          <div class="lever-baseline">Applies evenly to all 5 tiers ($299 / $199 / $299 / $299 / $249)</div>
+        </div>
       </div>
 
-      <div class="lever" data-lever="royalty">
-        <div class="lever-label-row">
-          <span class="lever-label">2. Royalty Affiliate %</span>
-          <div class="lever-value-wrap">
-            <input class="lever-value" id="royalty-num" inputmode="decimal" value="5.0%">
+      <div class="lever-group" data-structure="optionA" hidden>
+        <div class="fixed-info">
+          <strong>Setup Fee: $10,000/yr</strong> (fixed — Juan's counter-proposal, benchmarked against the ~$19K cost to open a Hotworx location itself).<br>
+          <strong>Net Setup Fee Profit Pool: $9,200/yr</strong> → $4,600 each to Prestige and Steve. This is a stated figure (a $14,000 pool reduction vs. Legacy), not derived from a fulfillment-cost formula, so it isn't a slider here.
+        </div>
+        <div class="lever" data-lever="royalty">
+          <div class="lever-label-row">
+            <span class="lever-label">2. Royalty Affiliate %</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionA_royalty-num" inputmode="decimal" value="5.0%">
+            </div>
           </div>
+          <div class="slider-wrap">
+            <div class="band-hint" id="optionA_royalty-band"></div>
+            <input type="range" id="optionA_royalty-range" min="0" max="20" step="0.5" value="5">
+          </div>
+          <div class="lever-scale"><span>0%</span><span>20%</span></div>
+          <div class="lever-baseline"><span class="band-dot"></span>Baseline: 5% (low end of the documented 5–12% range) &middot; split 50/50 w/ Steve</div>
         </div>
-        <div class="slider-wrap">
-          <div class="band-hint" id="royalty-band"></div>
-          <input type="range" id="royalty-range" min="0" max="20" step="0.5" value="5">
+        <div class="lever" data-lever="gpoMargin">
+          <div class="lever-label-row">
+            <span class="lever-label">3. GPO Margin %</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionA_gpoMargin-num" inputmode="decimal" value="30.0%">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <div class="band-hint" id="optionA_gpoMargin-band"></div>
+            <input type="range" id="optionA_gpoMargin-range" min="20" max="45" step="0.5" value="30">
+          </div>
+          <div class="lever-scale"><span>20%</span><span>45%</span></div>
+          <div class="lever-baseline"><span class="band-dot"></span>Baseline: 30% (low end of the documented 30–35% cap)</div>
         </div>
-        <div class="lever-scale"><span>0%</span><span>20%</span></div>
-        <div class="lever-baseline"><span class="band-dot"></span>Baseline: 5% (low end of the documented 5–12% range) &middot; split 50/50 w/ Steve</div>
+        <div class="lever" data-lever="ladderAdj">
+          <div class="lever-label-row">
+            <span class="lever-label">4. Retail Pricing Ladder</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionA_ladderAdj-num" inputmode="decimal" value="+0.0%">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" id="optionA_ladderAdj-range" min="-25" max="35" step="1" value="0">
+          </div>
+          <div class="lever-scale"><span>&minus;25%</span><span>+35%</span></div>
+          <div class="lever-baseline">Applies evenly to all 5 tiers ($299 / $199 / $299 / $299 / $249)</div>
+        </div>
       </div>
 
-      <div class="lever" data-lever="gpoMargin">
-        <div class="lever-label-row">
-          <span class="lever-label">3. GPO Margin %</span>
-          <div class="lever-value-wrap">
-            <input class="lever-value" id="gpoMargin-num" inputmode="decimal" value="30.0%">
+      <div class="lever-group" data-structure="optionB" hidden>
+        <div class="lever" data-lever="addOn">
+          <div class="lever-label-row">
+            <span class="lever-label">1. GPO Margin Add-On <span style="color:var(--muted);font-weight:500;">/ patient / mo</span></span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionB_addOn-num" inputmode="numeric" value="$30">
+            </div>
           </div>
+          <div class="slider-wrap">
+            <input type="range" id="optionB_addOn-range" min="0" max="60" step="1" value="30">
+          </div>
+          <div class="lever-scale"><span>$0</span><span>$60</span></div>
+          <div class="lever-baseline">Baseline: $30/patient/mo — self-funds close to what the $35,000 Setup Fee pool used to generate (breakeven &asymp;$29.49). Setup Fee itself is $0; Steve's Entity is Royalty-only.</div>
         </div>
-        <div class="slider-wrap">
-          <div class="band-hint" id="gpoMargin-band"></div>
-          <input type="range" id="gpoMargin-range" min="20" max="45" step="0.5" value="30">
+        <div class="lever" data-lever="royalty">
+          <div class="lever-label-row">
+            <span class="lever-label">2. Royalty Affiliate %</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionB_royalty-num" inputmode="decimal" value="5.0%">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <div class="band-hint" id="optionB_royalty-band"></div>
+            <input type="range" id="optionB_royalty-range" min="0" max="20" step="0.5" value="5">
+          </div>
+          <div class="lever-scale"><span>0%</span><span>20%</span></div>
+          <div class="lever-baseline"><span class="band-dot"></span>Baseline: 5% (low end of the documented 5–12% range) &middot; split 50/50 w/ Steve</div>
         </div>
-        <div class="lever-scale"><span>20%</span><span>45%</span></div>
-        <div class="lever-baseline"><span class="band-dot"></span>Baseline: 30% (low end of the documented 30–35% cap)</div>
+        <div class="lever" data-lever="gpoMargin">
+          <div class="lever-label-row">
+            <span class="lever-label">3. GPO Margin %</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionB_gpoMargin-num" inputmode="decimal" value="30.0%">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <div class="band-hint" id="optionB_gpoMargin-band"></div>
+            <input type="range" id="optionB_gpoMargin-range" min="20" max="45" step="0.5" value="30">
+          </div>
+          <div class="lever-scale"><span>20%</span><span>45%</span></div>
+          <div class="lever-baseline"><span class="band-dot"></span>Baseline: 30% (low end of the documented 30–35% cap)</div>
+        </div>
+        <div class="lever" data-lever="ladderAdj">
+          <div class="lever-label-row">
+            <span class="lever-label">4. Retail Pricing Ladder</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionB_ladderAdj-num" inputmode="decimal" value="+0.0%">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" id="optionB_ladderAdj-range" min="-25" max="35" step="1" value="0">
+          </div>
+          <div class="lever-scale"><span>&minus;25%</span><span>+35%</span></div>
+          <div class="lever-baseline">Applies evenly to all 5 tiers ($299 / $199 / $299 / $299 / $249)</div>
+        </div>
       </div>
 
-      <div class="lever" data-lever="ladderAdj">
-        <div class="lever-label-row">
-          <span class="lever-label">4. Retail Pricing Ladder</span>
-          <div class="lever-value-wrap">
-            <input class="lever-value" id="ladderAdj-num" inputmode="decimal" value="+0.0%">
+      <div class="lever-group" data-structure="optionC" hidden>
+        <div class="lever" data-lever="netMargin">
+          <div class="lever-label-row">
+            <span class="lever-label">1. Target Net Retail Margin <span style="color:var(--muted);font-weight:500;">/ patient / mo</span></span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionC_netMargin-num" inputmode="decimal" value="$87.50">
+            </div>
           </div>
+          <div class="slider-wrap">
+            <div class="band-hint" id="optionC_netMargin-band"></div>
+            <input type="range" id="optionC_netMargin-range" min="50" max="150" step="2.5" value="87.5">
+          </div>
+          <div class="lever-scale"><span>$50</span><span>$150</span></div>
+          <div class="lever-baseline"><span class="band-dot"></span>Documented band: $75&ndash;$100, net of VSDH's 5% platform fee + 2.9%+$0.30 processing fee</div>
         </div>
-        <div class="slider-wrap">
-          <input type="range" id="ladderAdj-range" min="-25" max="35" step="1" value="0">
+        <div class="lever" data-lever="cogs">
+          <div class="lever-label-row">
+            <span class="lever-label">2. Non-Injectable Peptide COGS <span style="color:var(--muted);font-weight:500;">/ mo</span></span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionC_cogs-num" inputmode="decimal" value="$157.75">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" id="optionC_cogs-range" min="80" max="250" step="2.5" value="157.75">
+          </div>
+          <div class="lever-scale"><span>$80</span><span>$250</span></div>
+          <div class="lever-baseline">Baseline: $157.75 (VSDH One's own 4-SKU average). Prestige's own cost for the same capsule/nasal-spray category is $98.63.</div>
         </div>
-        <div class="lever-scale"><span>&minus;25%</span><span>+35%</span></div>
-        <div class="lever-baseline">Applies evenly to all 5 tiers ($299 / $199 / $299 / $299 / $249)</div>
+        <div class="lever" data-lever="steveSplit">
+          <div class="lever-label-row">
+            <span class="lever-label">3. Steve's Share of Hotworx's Portion</span>
+            <div class="lever-value-wrap">
+              <input class="lever-value" id="optionC_steveSplit-num" inputmode="decimal" value="10%">
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" id="optionC_steveSplit-range" min="0" max="30" step="1" value="10">
+          </div>
+          <div class="lever-scale"><span>0%</span><span>30%</span></div>
+          <div class="lever-baseline">Baseline: 10% to Steve's Entity, 90% to the Franchisee Location.</div>
+        </div>
       </div>
 
       <div class="lever" data-lever="clients">
         <div class="lever-label-row">
-          <span class="lever-label">5. Avg. Clients / Location</span>
+          <span class="lever-label"><span id="clientsLeverNum">5</span>. Avg. Clients / Location</span>
           <div class="lever-value-wrap">
             <input class="lever-value" id="clients-num" inputmode="numeric" value="65">
           </div>
@@ -266,7 +441,7 @@
           <input type="range" id="clients-range" min="20" max="200" step="5" value="65">
         </div>
         <div class="lever-scale"><span>20</span><span>200</span></div>
-        <div class="lever-baseline">Baseline: 65 (even split across all 5 tiers)</div>
+        <div class="lever-baseline">Baseline: 65. Applies to whichever structure is selected above.</div>
       </div>
     </section>
 
@@ -315,9 +490,10 @@
             <tbody id="national-body"></tbody>
           </table>
         </div>
+        <p class="panel-sub" id="nationalNoteC" hidden style="margin:12px 0 0;">Figures above are before Prestige's own global operating costs (&asymp;$8,400/yr recurring + $2,500 one-time in Year 1 — Vercel hosting, Provider Network integration, and website/integration labor), which are shared across every location and deducted once nationally, not per door, before splitting with the Sotos.</p>
       </div>
 
-      <div class="panel">
+      <div class="panel" id="tierDetailPanel">
         <h2>Pricing Ladder — Per-Tier Detail</h2>
         <p class="panel-sub">Retail price, GPO price to the Franchisee Location, and Franchisee margin per client per month, at current lever settings.</p>
         <div class="table-scroll">
@@ -329,11 +505,24 @@
           </table>
         </div>
       </div>
+
+      <div class="panel" id="optionCDetailPanel" hidden>
+        <h2>Blended Peptide Line — Structure Detail</h2>
+        <p class="panel-sub">Option C replaces the 5-tier ladder with one blended, capsule-only peptide line priced off the VSDH One formulary and solved for the target net margin at left.</p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th></th><th>$ / patient / mo</th></tr>
+            </thead>
+            <tbody id="optionc-body"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer class="notes">
-    <p><strong>Model note:</strong> this is a simplified sensitivity model built on the Executive Summary's locked pricing structure (Sept 2026) — five retail tiers, real GPO wholesale cost, the $5/order Platform Fee, and the $35,000/yr Setup Fee at Prestige's documented ~$11,800/location fulfillment cost. The Royalty split (50/50, Prestige/Steve) and the JV Partner split (50/50, Prestige/Patient Acquisition AI) are held fixed, matching the Executive Summary's placeholder assumptions — they are not among the five adjustable levers. Figures are directional and meant for live scenario discussion, not a substitute for the underlying agreements.</p>
+    <p><strong>Model note:</strong> this is a simplified sensitivity model built on the Executive Summary's locked pricing structure (Sept 2026), now covering all four deal structures under discussion. Legacy, Option A, and Option B share the same five-tier medication ladder and real GPO wholesale costs; they differ only in the Setup Fee mechanics (Legacy: $35,000/yr at Prestige's documented ~$11,800/location fulfillment cost; Option A: a fixed $10,000/yr fee with a stated $9,200 profit pool; Option B: $0 fee, self-funded via a GPO margin add-on). Option C replaces that ladder entirely with one blended, capsule-only peptide line priced off the VSDH One platform's fixed formulary, solved for a target net margin after VSDH's 5% platform fee and 2.9%+$0.30 processing fee. The Royalty split (50/50, Prestige/Steve) and the JV Partner split (50/50, Prestige/Patient Acquisition AI) are held fixed throughout, matching the Executive Summary's placeholder assumptions — they are not among the adjustable levers. Figures are directional and meant for live scenario discussion, not a substitute for the underlying agreements.</p>
   </footer>
 </div>
 
@@ -349,7 +538,13 @@
     { key:"pep90",     label:"Peptides — 90-Day", note:"BUD-compliant fill", baseRetail:249, naked:34.49 }
   ];
 
-  var FULFILLMENT_COST = 11800;
+  var FULFILLMENT_COST_LEGACY = 11800;
+  var OPTION_A_FEE = 10000;
+  var OPTION_A_POOL = 9200;
+  var VSDH_FEE_PCT = 0.05;
+  var PROC_PCT = 0.029;
+  var PROC_FLAT = 0.30;
+
   var MILESTONES = [
     { label:"Month 3", doors:240 },
     { label:"Month 6", doors:480 },
@@ -357,10 +552,22 @@
     { label:"Month 11 — Full", doors:900, full:true }
   ];
 
-  var BASELINE = { setupFee:35000, royalty:0.05, gpoMargin:0.30, ladderAdj:0, clients:65 };
+  var STRUCTURE_NOTES = {
+    legacy: "The original $35,000/yr Setup Fee model. Franchisee pays the fee once; Prestige and Steve split the net profit pool 50/50, and both also share in the ongoing medication-margin economics below.",
+    optionA: "Juan's counter-proposal: a $10,000/yr Setup Fee (benchmarked against the ~$19K cost to open a Hotworx location itself), still split 50/50 but at a smaller stated profit pool. The Franchisee's ongoing medication economics are unchanged from Legacy.",
+    optionB: "Removes the Setup Fee entirely. Prestige instead adds a flat GPO margin add-on to its medication cost, recovering over the course of a year close to what the Setup Fee pool used to generate. Steve's Entity is Royalty-only under this structure — there is no Setup Fee profit share left to split.",
+    optionC: "The \"keep it simple\" version, built for the VSDH platform's fixed formulary: no Setup Fee and no separate $5 Platform Fee. One blended, capsule-only peptide margin is solved for a target net (after VSDH's 5% platform fee and 2.9%+$0.30 processing fee), then split three ways — Prestige, Steve's Entity, and the Franchisee Location."
+  };
 
-  var state = Object.assign({}, BASELINE);
-  var baselineResult = compute(BASELINE);
+  var BASELINES = {
+    legacy:  { setupFee:35000, royalty:0.05, gpoMargin:0.30, ladderAdj:0, clients:65 },
+    optionA: { royalty:0.05, gpoMargin:0.30, ladderAdj:0, clients:65 },
+    optionB: { addOn:30, royalty:0.05, gpoMargin:0.30, ladderAdj:0, clients:65 },
+    optionC: { netMargin:87.5, cogs:157.75, steveSplit:0.10, clients:65 }
+  };
+
+  var state = { structure:"legacy" };
+  Object.keys(BASELINES).forEach(function(s){ state[s] = Object.assign({}, BASELINES[s]); });
 
   function fmtUSD(n){
     var neg = n < 0;
@@ -378,46 +585,154 @@
     return (n*100).toFixed(digits===undefined?1:digits) + "%";
   }
 
-  function compute(inputs){
+  function computeTierBased(structureKey, inputs){
     var clientsPerTier = inputs.clients / 5;
     var annualOrders = clientsPerTier * 12;
-    var franchiseeGross = 0, prestigeTrans = 0, royaltyPool = 0;
+    var franchiseeGross = 0, prestigeTransBase = 0, royaltyPool = 0, addOnAnnualTotal = 0;
+    var addOnPerOrder = structureKey === "optionB" ? inputs.addOn : 0;
+
     var tierRows = TIERS.map(function(t){
       var retail = t.baseRetail * (1 + inputs.ladderAdj);
       var gpoPrice = t.naked / (1 - inputs.gpoMargin);
       var transMargin = gpoPrice - t.naked;
       var royaltyPerOrder = retail * inputs.royalty;
-      var franchiseeMarginPerOrder = retail - gpoPrice - 5 - royaltyPerOrder;
+      var franchiseeMarginPerOrder = retail - gpoPrice - 5 - royaltyPerOrder - addOnPerOrder;
       var franchiseeAnnual = franchiseeMarginPerOrder * annualOrders;
       var prestigeTransAnnual = (transMargin + 5) * annualOrders;
       var royaltyAnnual = royaltyPerOrder * annualOrders;
       franchiseeGross += franchiseeAnnual;
-      prestigeTrans += prestigeTransAnnual;
+      prestigeTransBase += prestigeTransAnnual;
       royaltyPool += royaltyAnnual;
+      addOnAnnualTotal += addOnPerOrder * annualOrders;
       return {
         key:t.key, label:t.label, note:t.note,
         retail:retail, gpoPrice:gpoPrice, franchiseeMarginPerOrder:franchiseeMarginPerOrder
       };
     });
 
-    var franchiseeNet = franchiseeGross - inputs.setupFee;
-    var netSetupFeeProfit = inputs.setupFee - FULFILLMENT_COST;
+    var setupFee, netSetupFeeProfit;
+    if (structureKey === "legacy"){ setupFee = inputs.setupFee; netSetupFeeProfit = setupFee - FULFILLMENT_COST_LEGACY; }
+    else if (structureKey === "optionA"){ setupFee = OPTION_A_FEE; netSetupFeeProfit = OPTION_A_POOL; }
+    else { setupFee = 0; netSetupFeeProfit = 0; }
+
     var setupShare = netSetupFeeProfit / 2;
     var royaltyShare = royaltyPool / 2;
+    var prestigeTrans = prestigeTransBase + addOnAnnualTotal;
+    var franchiseeNet = franchiseeGross - setupFee;
     var prestigeGrossPreSplit = prestigeTrans + setupShare + royaltyShare;
     var prestigeNet = prestigeGrossPreSplit / 2;
-    var jvPartnerNet = prestigeGrossPreSplit / 2;
     var steveNet = setupShare + royaltyShare;
 
+    var franchiseeRows, prestigeRows, steveRows;
+
+    if (structureKey === "optionB"){
+      franchiseeRows = [
+        { label:"Medication margin, before GPO add-on", value: franchiseeGross + addOnAnnualTotal },
+        { label:"Less: GPO Margin Add-On ($" + Math.round(inputs.addOn) + "/patient/mo)", value: -addOnAnnualTotal },
+        { label:"Setup Fee (eliminated)", value: 0 },
+        { label:"Annual Net", value: franchiseeNet, total:true }
+      ];
+      prestigeRows = [
+        { label:"Transactional (GPO margin + $5 fee)", value: prestigeTransBase },
+        { label:"Plus: GPO Margin Add-On captured", value: addOnAnnualTotal },
+        { label:"Setup Fee Profit Share (no pool exists)", value: 0 },
+        { label:"Royalty Share (50%)", value: royaltyShare },
+        { label:"Pre-JV-split total", value: prestigeGrossPreSplit },
+        { label:"Net of 50/50 JV split", value: prestigeNet, total:true }
+      ];
+      steveRows = [
+        { label:"Setup Fee Profit Share (no pool exists)", value: 0 },
+        { label:"Royalty Share (50%)", value: royaltyShare },
+        { label:"Annual Net", value: steveNet, total:true }
+      ];
+    } else {
+      var feeLabel = structureKey === "optionA" ? "Less: Setup Fee ($10,000 fixed)" : "Less: Setup Fee";
+      var shareLabel = structureKey === "optionA" ? "Setup Fee Profit Share (50% of $9,200 fixed pool)" : "Setup Fee Profit Share (50%)";
+      franchiseeRows = [
+        { label:"Medication margin (5 tiers)", value: franchiseeGross },
+        { label:feeLabel, value: -setupFee },
+        { label:"Annual Net", value: franchiseeNet, total:true }
+      ];
+      prestigeRows = [
+        { label:"Transactional (GPO margin + $5 fee)", value: prestigeTrans },
+        { label:shareLabel, value: setupShare },
+        { label:"Royalty Share (50%)", value: royaltyShare },
+        { label:"Pre-JV-split total", value: prestigeGrossPreSplit },
+        { label:"Net of 50/50 JV split", value: prestigeNet, total:true }
+      ];
+      steveRows = [
+        { label:shareLabel, value: setupShare },
+        { label:"Royalty Share (50%)", value: royaltyShare },
+        { label:"Annual Net", value: steveNet, total:true }
+      ];
+    }
+
     return {
-      tierRows:tierRows,
-      franchiseeGross:franchiseeGross, franchiseeNet:franchiseeNet,
-      prestigeTrans:prestigeTrans, netSetupFeeProfit:netSetupFeeProfit, setupShare:setupShare,
-      royaltyPool:royaltyPool, royaltyShare:royaltyShare,
-      prestigeGrossPreSplit:prestigeGrossPreSplit, prestigeNet:prestigeNet, jvPartnerNet:jvPartnerNet,
-      steveNet:steveNet
+      franchiseeNet:franchiseeNet, prestigeNet:prestigeNet, steveNet:steveNet, prestigeGrossPreSplit:prestigeGrossPreSplit,
+      franchiseeRows:franchiseeRows, prestigeRows:prestigeRows, steveRows:steveRows,
+      mode:"tiers", tierRows:tierRows
     };
   }
+
+  function computeOptionC(inputs){
+    var COGS = inputs.cogs;
+    var netMargin = inputs.netMargin;
+    var GM = (netMargin + PROC_PCT*COGS + PROC_FLAT) / (1 - VSDH_FEE_PCT - PROC_PCT);
+    var retail = COGS + GM;
+    var vsdhFeeAmt = VSDH_FEE_PCT * GM;
+    var procFeeAmt = PROC_PCT * retail + PROC_FLAT;
+    var netAchieved = GM - vsdhFeeAmt - procFeeAmt;
+
+    var prestigeShare = Math.max(30, 0.6*netMargin - 15);
+    var hotworxShare = netMargin - prestigeShare;
+    var steveShare = inputs.steveSplit * hotworxShare;
+    var franchiseeShare = hotworxShare - steveShare;
+
+    var annualOrders = inputs.clients * 12;
+    var franchiseeNet = franchiseeShare * annualOrders;
+    var steveNet = steveShare * annualOrders;
+    var prestigeGrossPreSplit = prestigeShare * annualOrders;
+    var prestigeNet = prestigeGrossPreSplit / 2;
+
+    var franchiseeRows = [
+      { label:"Hotworx global share — Franchisee's portion (" + fmtPct(1-inputs.steveSplit,0) + ")", value: franchiseeNet },
+      { label:"Annual Net", value: franchiseeNet, total:true }
+    ];
+    var prestigeRows = [
+      { label:"Prestige's share of net retail margin (pre-JV-split, before its own global operating costs)", value: prestigeGrossPreSplit },
+      { label:"Net of 50/50 JV split", value: prestigeNet, total:true }
+    ];
+    var steveRows = [
+      { label:"Hotworx global share — Steve's portion (" + fmtPct(inputs.steveSplit,0) + ")", value: steveNet },
+      { label:"Annual Net", value: steveNet, total:true }
+    ];
+
+    var detailRows = [
+      { label:"Non-Injectable Peptide COGS", value: COGS },
+      { label:"Required Gross Margin (solved)", value: GM },
+      { label:"Retail Price to Client", value: retail, strong:true },
+      { label:"Less: VSDH Platform Fee (5% of gross margin)", value: -vsdhFeeAmt },
+      { label:"Less: Payment Processing Fee (2.9% + $0.30)", value: -procFeeAmt },
+      { label:"Net Retail Margin Achieved", value: netAchieved, strong:true },
+      { label:"— Prestige's Share", value: prestigeShare },
+      { label:"— Hotworx Global Share (Steve + Franchisee)", value: hotworxShare },
+      { label:"      Steve's Portion", value: steveShare },
+      { label:"      Franchisee's Portion", value: franchiseeShare }
+    ];
+
+    return {
+      franchiseeNet:franchiseeNet, prestigeNet:prestigeNet, steveNet:steveNet, prestigeGrossPreSplit:prestigeGrossPreSplit,
+      franchiseeRows:franchiseeRows, prestigeRows:prestigeRows, steveRows:steveRows,
+      mode:"optionC", detailRows:detailRows
+    };
+  }
+
+  function compute(structureKey, inputs){
+    return structureKey === "optionC" ? computeOptionC(inputs) : computeTierBased(structureKey, inputs);
+  }
+
+  var baselineResults = {};
+  Object.keys(BASELINES).forEach(function(s){ baselineResults[s] = compute(s, BASELINES[s]); });
 
   function deltaBadge(el, current, base){
     var diff = current - base;
@@ -430,7 +745,7 @@
     }
     var arrow = diff > 0 ? "▲" : "▼";
     el.classList.add(diff > 0 ? "pos" : "neg");
-    el.textContent = arrow + " " + fmtUSD(Math.abs(diff)) + " (" + (diff>0?"+":"−") + Math.abs(pct).toFixed(1) + "%) vs. baseline";
+    el.textContent = arrow + " " + fmtUSD(Math.abs(diff)) + " (" + (diff>0?"+":"−") + Math.abs(pct).toFixed(1) + "%) vs. structure baseline";
   }
 
   function pulse(el){
@@ -439,11 +754,25 @@
     el._pulseTimer = setTimeout(function(){ el.classList.remove("pulse"); }, 260);
   }
 
+  function rowsHTML(rows){
+    return rows.map(function(r){
+      return '<div class="breakdown-row' + (r.total ? ' total' : '') + '"><span>' + r.label + '</span><span>' + fmtUSD(r.value) + '</span></div>';
+    }).join("");
+  }
+
   var nationalBody = document.getElementById("national-body");
   var tierBody = document.getElementById("tier-body");
+  var optionCBody = document.getElementById("optionc-body");
+  var tierDetailPanel = document.getElementById("tierDetailPanel");
+  var optionCDetailPanel = document.getElementById("optionCDetailPanel");
+  var nationalNoteC = document.getElementById("nationalNoteC");
+  var structureNoteEl = document.getElementById("structureNote");
+  var clientsLeverNum = document.getElementById("clientsLeverNum");
 
   function render(){
-    var r = compute(state);
+    var structureKey = state.structure;
+    var r = compute(structureKey, state[structureKey]);
+    var base = baselineResults[structureKey];
 
     var fEl = document.getElementById("franchisee-amount");
     var pEl = document.getElementById("prestige-amount");
@@ -452,26 +781,13 @@
     pEl.textContent = fmtUSD(r.prestigeNet); pulse(pEl);
     sEl.textContent = fmtUSD(r.steveNet); pulse(sEl);
 
-    deltaBadge(document.getElementById("franchisee-delta"), r.franchiseeNet, baselineResult.franchiseeNet);
-    deltaBadge(document.getElementById("prestige-delta"), r.prestigeNet, baselineResult.prestigeNet);
-    deltaBadge(document.getElementById("steve-delta"), r.steveNet, baselineResult.steveNet);
+    deltaBadge(document.getElementById("franchisee-delta"), r.franchiseeNet, base.franchiseeNet);
+    deltaBadge(document.getElementById("prestige-delta"), r.prestigeNet, base.prestigeNet);
+    deltaBadge(document.getElementById("steve-delta"), r.steveNet, base.steveNet);
 
-    document.getElementById("franchisee-breakdown").innerHTML =
-      '<div class="breakdown-row"><span>Medication margin (5 tiers)</span><span>' + fmtUSD(r.franchiseeGross) + '</span></div>' +
-      '<div class="breakdown-row"><span>Less: Setup Fee</span><span>−' + fmtUSD(state.setupFee) + '</span></div>' +
-      '<div class="breakdown-row total"><span>Annual Net</span><span>' + fmtUSD(r.franchiseeNet) + '</span></div>';
-
-    document.getElementById("prestige-breakdown").innerHTML =
-      '<div class="breakdown-row"><span>Transactional (GPO margin + $5 fee)</span><span>' + fmtUSD(r.prestigeTrans) + '</span></div>' +
-      '<div class="breakdown-row"><span>Setup Fee Profit Share (50%)</span><span>' + fmtUSD(r.setupShare) + '</span></div>' +
-      '<div class="breakdown-row"><span>Royalty Share (50%)</span><span>' + fmtUSD(r.royaltyShare) + '</span></div>' +
-      '<div class="breakdown-row"><span>Pre-JV-split total</span><span>' + fmtUSD(r.prestigeGrossPreSplit) + '</span></div>' +
-      '<div class="breakdown-row total"><span>Net of 50/50 JV split</span><span>' + fmtUSD(r.prestigeNet) + '</span></div>';
-
-    document.getElementById("steve-breakdown").innerHTML =
-      '<div class="breakdown-row"><span>Setup Fee Profit Share (50%)</span><span>' + fmtUSD(r.setupShare) + '</span></div>' +
-      '<div class="breakdown-row"><span>Royalty Share (50%)</span><span>' + fmtUSD(r.royaltyShare) + '</span></div>' +
-      '<div class="breakdown-row total"><span>Annual Net</span><span>' + fmtUSD(r.steveNet) + '</span></div>';
+    document.getElementById("franchisee-breakdown").innerHTML = rowsHTML(r.franchiseeRows);
+    document.getElementById("prestige-breakdown").innerHTML = rowsHTML(r.prestigeRows);
+    document.getElementById("steve-breakdown").innerHTML = rowsHTML(r.steveRows);
 
     nationalBody.innerHTML = MILESTONES.map(function(m){
       var fAgg = r.franchiseeNet * m.doors;
@@ -486,14 +802,27 @@
         '</tr>';
     }).join("");
 
-    tierBody.innerHTML = r.tierRows.map(function(t){
-      return '<tr>' +
-        '<td>' + t.label + '<span class="tier-note">' + t.note + '</span></td>' +
-        '<td>' + fmtUSDCents(t.retail) + '</td>' +
-        '<td>' + fmtUSDCents(t.gpoPrice) + '</td>' +
-        '<td>' + fmtUSDCents(t.franchiseeMarginPerOrder) + '</td>' +
-        '</tr>';
-    }).join("");
+    if (r.mode === "tiers"){
+      tierDetailPanel.hidden = false;
+      optionCDetailPanel.hidden = true;
+      nationalNoteC.hidden = true;
+      tierBody.innerHTML = r.tierRows.map(function(t){
+        return '<tr>' +
+          '<td>' + t.label + '<span class="tier-note">' + t.note + '</span></td>' +
+          '<td>' + fmtUSDCents(t.retail) + '</td>' +
+          '<td>' + fmtUSDCents(t.gpoPrice) + '</td>' +
+          '<td>' + fmtUSDCents(t.franchiseeMarginPerOrder) + '</td>' +
+          '</tr>';
+      }).join("");
+    } else {
+      tierDetailPanel.hidden = true;
+      optionCDetailPanel.hidden = false;
+      nationalNoteC.hidden = false;
+      optionCBody.innerHTML = r.detailRows.map(function(d){
+        var style = d.strong ? ' style="font-weight:700;color:var(--heading);"' : '';
+        return '<tr><td' + style + '>' + d.label + '</td><td' + style + '>' + fmtUSDCents(d.value) + '</td></tr>';
+      }).join("");
+    }
   }
 
   function setBandHint(id, min, max, lo, hi){
@@ -504,30 +833,36 @@
     el.style.left = left + "%";
     el.style.width = width + "%";
   }
-  setBandHint("royalty-band", 0, 20, 5, 12);
-  setBandHint("gpoMargin-band", 20, 45, 30, 35);
+  setBandHint("legacy_royalty-band", 0, 20, 5, 12);
+  setBandHint("legacy_gpoMargin-band", 20, 45, 30, 35);
+  setBandHint("optionA_royalty-band", 0, 20, 5, 12);
+  setBandHint("optionA_gpoMargin-band", 20, 45, 30, 35);
+  setBandHint("optionB_royalty-band", 0, 20, 5, 12);
+  setBandHint("optionB_gpoMargin-band", 20, 45, 30, 35);
+  setBandHint("optionC_netMargin-band", 50, 150, 75, 100);
 
-  function bindLever(key, opts){
-    var range = document.getElementById(key + "-range");
-    var num = document.getElementById(key + "-num");
+  function bindLever(structureKey, key, opts){
+    var range = document.getElementById(structureKey + "_" + key + "-range");
+    var num = document.getElementById(structureKey + "_" + key + "-num");
+    if (!range || !num) return;
 
     function toDisplay(v){ return opts.format(v); }
     function fromRange(rawStr){ return parseFloat(rawStr) * opts.scale; }
     function toRange(v){ return v / opts.scale; }
 
     range.addEventListener("input", function(){
-      state[key] = fromRange(range.value);
-      num.value = toDisplay(state[key]);
+      state[structureKey][key] = fromRange(range.value);
+      num.value = toDisplay(state[structureKey][key]);
       render();
     });
 
     num.addEventListener("change", function(){
       var cleaned = num.value.replace(/[^0-9.\-]/g, "");
       var v = parseFloat(cleaned);
-      if (isNaN(v)){ num.value = toDisplay(state[key]); return; }
+      if (isNaN(v)){ num.value = toDisplay(state[structureKey][key]); return; }
       if (opts.isPercent) v = v/100;
       v = Math.max(opts.min, Math.min(opts.max, v));
-      state[key] = v;
+      state[structureKey][key] = v;
       range.value = toRange(v);
       num.value = toDisplay(v);
       render();
@@ -536,45 +871,91 @@
     num.addEventListener("keydown", function(e){ if (e.key === "Enter") num.blur(); });
 
     // init
-    num.value = toDisplay(state[key]);
+    num.value = toDisplay(state[structureKey][key]);
   }
 
-  bindLever("setupFee", {
-    scale:1, min:10000, max:60000, isPercent:false,
-    format:function(v){ return "$" + Math.round(v).toLocaleString("en-US"); }
+  ["legacy","optionA","optionB"].forEach(function(s){
+    if (s === "legacy"){
+      bindLever(s, "setupFee", {
+        scale:1, min:10000, max:60000, isPercent:false,
+        format:function(v){ return "$" + Math.round(v).toLocaleString("en-US"); }
+      });
+    }
+    bindLever(s, "royalty", { scale:0.01, min:0, max:0.20, isPercent:true, format:function(v){ return fmtPct(v,1); } });
+    bindLever(s, "gpoMargin", { scale:0.01, min:0.20, max:0.45, isPercent:true, format:function(v){ return fmtPct(v,1); } });
+    bindLever(s, "ladderAdj", { scale:0.01, min:-0.25, max:0.35, isPercent:true, format:function(v){ var p=(v*100); return (p>=0?"+":"") + p.toFixed(1) + "%"; } });
   });
-  bindLever("royalty", {
-    scale:0.01, min:0, max:0.20, isPercent:true,
-    format:function(v){ return fmtPct(v,1); }
+
+  bindLever("optionB", "addOn", {
+    scale:1, min:0, max:60, isPercent:false,
+    format:function(v){ return "$" + Math.round(v); }
   });
-  bindLever("gpoMargin", {
-    scale:0.01, min:0.20, max:0.45, isPercent:true,
-    format:function(v){ return fmtPct(v,1); }
-  });
-  bindLever("ladderAdj", {
-    scale:0.01, min:-0.25, max:0.35, isPercent:true,
-    format:function(v){ var p=(v*100); return (p>=0?"+":"") + p.toFixed(1) + "%"; }
-  });
-  bindLever("clients", {
-    scale:1, min:20, max:200, isPercent:false,
-    format:function(v){ return Math.round(v).toString(); }
+
+  bindLever("optionC", "netMargin", { scale:1, min:50, max:150, isPercent:false, format:function(v){ return "$" + v.toFixed(2); } });
+  bindLever("optionC", "cogs", { scale:1, min:80, max:250, isPercent:false, format:function(v){ return "$" + v.toFixed(2); } });
+  bindLever("optionC", "steveSplit", { scale:0.01, min:0, max:0.30, isPercent:true, format:function(v){ return fmtPct(v,0); } });
+
+  // Shared "Clients / Location" lever — applies to whichever structure is active
+  (function(){
+    var range = document.getElementById("clients-range");
+    var num = document.getElementById("clients-num");
+    range.addEventListener("input", function(){
+      state[state.structure].clients = parseFloat(range.value);
+      num.value = String(Math.round(state[state.structure].clients));
+      render();
+    });
+    num.addEventListener("change", function(){
+      var v = parseFloat(num.value.replace(/[^0-9.\-]/g, ""));
+      if (isNaN(v)){ num.value = String(Math.round(state[state.structure].clients)); return; }
+      v = Math.max(20, Math.min(200, v));
+      state[state.structure].clients = v;
+      range.value = v;
+      num.value = String(Math.round(v));
+      render();
+    });
+    num.addEventListener("keydown", function(e){ if (e.key === "Enter") num.blur(); });
+  })();
+
+  function syncClientsInput(){
+    var v = state[state.structure].clients;
+    document.getElementById("clients-range").value = v;
+    document.getElementById("clients-num").value = String(Math.round(v));
+    clientsLeverNum.textContent = state.structure === "optionC" ? "4" : "5";
+  }
+
+  var structureTabs = document.querySelectorAll(".structure-tab");
+  var leverGroups = document.querySelectorAll(".lever-group");
+  structureTabs.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var s = btn.getAttribute("data-structure");
+      state.structure = s;
+      structureTabs.forEach(function(b){ b.classList.toggle("active", b === btn); });
+      leverGroups.forEach(function(g){ g.hidden = (g.getAttribute("data-structure") !== s); });
+      structureNoteEl.textContent = STRUCTURE_NOTES[s];
+      syncClientsInput();
+      render();
+    });
   });
 
   document.getElementById("resetBtn").addEventListener("click", function(){
-    state = Object.assign({}, BASELINE);
-    document.getElementById("setupFee-range").value = BASELINE.setupFee;
-    document.getElementById("setupFee-num").value = "$" + BASELINE.setupFee.toLocaleString("en-US");
-    document.getElementById("royalty-range").value = BASELINE.royalty*100;
-    document.getElementById("royalty-num").value = fmtPct(BASELINE.royalty,1);
-    document.getElementById("gpoMargin-range").value = BASELINE.gpoMargin*100;
-    document.getElementById("gpoMargin-num").value = fmtPct(BASELINE.gpoMargin,1);
-    document.getElementById("ladderAdj-range").value = 0;
-    document.getElementById("ladderAdj-num").value = "+0.0%";
-    document.getElementById("clients-range").value = BASELINE.clients;
-    document.getElementById("clients-num").value = String(BASELINE.clients);
+    var s = state.structure;
+    state[s] = Object.assign({}, BASELINES[s]);
+    Object.keys(BASELINES[s]).forEach(function(key){
+      if (key === "clients") return;
+      var range = document.getElementById(s + "_" + key + "-range");
+      var num = document.getElementById(s + "_" + key + "-num");
+      if (!range || !num) return;
+      var v = BASELINES[s][key];
+      if (key === "setupFee" || key === "addOn"){ range.value = v; num.value = "$" + Math.round(v).toLocaleString("en-US"); }
+      else if (key === "royalty" || key === "gpoMargin" || key === "steveSplit"){ range.value = v*100; num.value = fmtPct(v,1); }
+      else if (key === "ladderAdj"){ range.value = 0; num.value = "+0.0%"; }
+      else if (key === "netMargin" || key === "cogs"){ range.value = v; num.value = "$" + v.toFixed(2); }
+    });
+    syncClientsInput();
     render();
   });
 
+  syncClientsInput();
   render();
 })();
 </script>
